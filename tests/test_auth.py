@@ -137,7 +137,10 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
     async def test_close_cleans_up_pending_login_process(self):
         await self.auth.start()
         process = self.auth.client.process
-        await asyncio.wait_for(self.auth.close(), 2)
+        # Bound the direct await without creating a helper task: helper-task
+        # scheduling can mask the Python 3.11 shutdown race being exercised.
+        async with asyncio.timeout(2):
+            await self.auth.close()
         self.assertIsNotNone(process.returncode)
         self.assertIsNone(self.auth.watcher)
         self.assertIsNone(self.auth.login)
