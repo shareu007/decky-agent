@@ -152,7 +152,11 @@ class ChatGPTAuth:
                         raise RuntimeError("Codex disconnected")
                     if event.get("loginId") == login_id:
                         return event
-            event = await asyncio.wait_for(completion(), LOGIN_SECONDS)
+            # Keep cancellation in this watcher. Python 3.11 wait_for can race
+            # a completed helper task and swallow shutdown cancellation, leaving
+            # this watcher waiting for the lock held by _cancel_locked.
+            async with asyncio.timeout(LOGIN_SECONDS):
+                event = await completion()
             async with self.lock:
                 if not self.login or self.login["id"] != login_id:
                     return

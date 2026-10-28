@@ -33,6 +33,6 @@ Automated scans have limits. Test fixtures deliberately contain fake credentials
 
 The prepared source contains 104 files; the full install ZIP contains 110 entries and the Lite ZIP contains 65. Project privacy checks passed for the source index and both archives. Gitleaks 8.30.1, verified against its official release SHA256, reported no leaks in the public source or extracted release text. The native runtime was reconstructed from the integrity-verified official Codex package. Public npm deprecation notices containing an upstream maintainer contact were reviewed as dependency metadata; root package author fields still receive the email check.
 
-Validation also passed 109 backend tests, 27 frontend tests, TypeScript checking and the production build. These results describe this publication snapshot and are not a guarantee about future edits or third-party services.
+Validation also passed 110 backend tests, 27 frontend tests, TypeScript checking and the production build. These results describe this publication snapshot and are not a guarantee about future edits or third-party services.
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for commands and [SECURITY.md](../SECURITY.md) for private reports.
