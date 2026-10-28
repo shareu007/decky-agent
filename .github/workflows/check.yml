@@ -2,6 +2,9 @@ name: Check and package
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,3 +33,31 @@ jobs:
         with:
           name: decky-agent-steamdeck
           path: out/*
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: decky-agent-steamdeck
+          path: out
+      - name: Publish audited install packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          cat > release-notes.md <<'EOF'
+          A coding agent in the Decky sidebar with ChatGPT sign-in, custom APIs, model selection, permission modes, voice-to-draft and 中文 / English.
+
+          - **steamdeck.zip** includes the pinned official Codex Linux x64 runtime.
+          - **lite.zip** uses an existing Codex installation or the compatible API engine.
+          - Verify the ZIP with its matching **.sha256** file before running **install-on-deck.sh**.
+
+          Source and install packages use explicit publication manifests and pass the privacy checks. See the README and docs/PRIVACY.md for setup and boundaries. This is an early community release.
+          EOF
+          gh release create "$TAG_NAME" out/*.zip out/*.sha256 out/install-on-deck.sh \
+            --verify-tag --title "Decky Agent $TAG_NAME" --notes-file release-notes.md
