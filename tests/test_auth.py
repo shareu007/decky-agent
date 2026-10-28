@@ -137,7 +137,7 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
     async def test_close_cleans_up_pending_login_process(self):
         await self.auth.start()
         process = self.auth.client.process
-        await self.auth.close()
+        await asyncio.wait_for(self.auth.close(), 2)
         self.assertIsNotNone(process.returncode)
         self.assertIsNone(self.auth.watcher)
         self.assertIsNone(self.auth.login)
