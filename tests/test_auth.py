@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -144,6 +145,27 @@ class AuthTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNotNone(process.returncode)
         self.assertIsNone(self.auth.watcher)
         self.assertIsNone(self.auth.login)
+
+    async def test_disconnected_login_cancellation_cannot_wait_for_the_canceller_lock(self):
+        async def disconnected():
+            # Cancel after the completion becomes ready, before its waiter is
+            # resumed. Python 3.11 wait_for used to swallow this cancellation.
+            asyncio.get_running_loop().call_soon(self.auth.watcher.cancel)
+            return None
+
+        client = SimpleNamespace(completions=SimpleNamespace(get=disconnected), close=AsyncMock())
+        self.auth.client = client
+        self.auth.login = {'id': 'test-login'}
+        watcher = self.auth.watcher = asyncio.create_task(self.auth._wait(client, 'test-login'))
+        try:
+            async with self.auth.lock:
+                for _ in range(8):
+                    await asyncio.sleep(0)
+                self.assertTrue(watcher.done(), 'Cancelled login must not wait for the lock held by its canceller')
+        finally:
+            watcher.cancel()
+            await asyncio.gather(watcher, return_exceptions=True)
+            self.auth.watcher = self.auth.client = self.auth.login = None
 
     def service(self):
         service = AgentService(self.root / "config", self.root / "data", self.root, self.root)
