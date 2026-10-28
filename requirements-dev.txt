@@ -1,0 +1,2 @@
+# Decky Loader already supplies aiohttp at runtime. Only needed for local HTTP tests.
+aiohttp>=3.9,<4

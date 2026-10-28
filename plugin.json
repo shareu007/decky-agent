@@ -1,0 +1,14 @@
+{
+  "name": "Decky Agent",
+  "author": "Decky Agent contributors",
+  "flags": [],
+  "api_version": 1,
+  "publish": {
+    "tags": [
+      "utility",
+      "development",
+      "ai"
+    ],
+    "description": "A coding agent in the Decky sidebar, with Codex integration, custom API providers, voice input and tool approvals."
+  }
+}
